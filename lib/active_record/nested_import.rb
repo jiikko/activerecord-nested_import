@@ -1,6 +1,18 @@
-require "activerecord/nested_import/version"
+require "active_record/nested_import/version"
 
-module Activerecord
+if defined?(Rails)
+  class Railtie < Rails::Railtie
+    initializer 'initialize activerecord-nested_import' do
+      ActiveSupport.on_load(:active_record) do
+        ::ActiveRecord::Base.send(:include, ActiveRecord::NestedImport)
+      end
+    end
+  end
+else
+  ::ActiveRecord::Base.send(:include, ActiveRecord::NestedImport)
+end
+
+module ActiveRecord
   module NestedImport
     def nested_import(association_name, attrs, options = {})
       collected_value_hash = ->(attrs) {
@@ -34,16 +46,4 @@ module Activerecord
       end
     end
   end
-end
-
-if defined?(Rails)
-  class Railtie < Rails::Railtie
-    initializer 'initialize active_record-nested_import' do
-      ActiveSupport.on_load(:active_record) do
-        ::ActiveRecord::Base.send(:include, Activerecord::NestedImport)
-      end
-    end
-  end
-else
-  ::ActiveRecord::Base.send(:include, Activerecord::NestedImport)
 end
