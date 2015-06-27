@@ -24,7 +24,13 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+TODO
+```ruby
+post = Post.find(1)
+tag_attrs = [{ name: :human }, { name: :life }, { name: :animal }]
+post.nested_import(:tags, tag_attrs)
+post.tags.map(&:name) # => ['human', 'life', 'animal']
+```
 
 ## Contributing
 
