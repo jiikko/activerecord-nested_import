@@ -1,6 +1,6 @@
-# Activerecord::NestedImport
+# ActiveRecord::NestedImport
 
-activerecord-nested_import is activerecord-import wrapprt.
+activerecord-nested_import is activerecord-import wrapper.
 
 ## Requirement
 
