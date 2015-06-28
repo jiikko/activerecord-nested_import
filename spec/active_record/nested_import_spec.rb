@@ -10,7 +10,6 @@ describe ActiveRecord::NestedImport do
 
     context 'with 0 record' do
       it 'be success' do
-        attrs = words.map { |x| { name: x } }
         user = User.create
         user.nested_import(
           :tags,
@@ -21,7 +20,7 @@ describe ActiveRecord::NestedImport do
       end
     end
 
-    context 'with existing records' do
+    context 'with exist records' do
       it 'be success' do
         # TODO
       end
