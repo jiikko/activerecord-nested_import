@@ -28,11 +28,16 @@ module ActiveRecord
 
       association_options = self.class.reflect_on_association(association_name).options
       klass = association_options[:class_name].constantize # tag
-      records = self.public_send(association_name).build(attrs.uniq)
-      klass.import(records, validate: false, timestamps: false)
+      build_records = self.public_send(association_name).build(attrs.uniq)
+      persisted_records = klass.where(collected_value_hash.call(attrs.uniq))
+      new_records = []
+      if persisted_records.empty?
+        new_records = build_records
+      else
+        persisted_records.each { |x| new_records.push(x) unless build_records.detect { |y| y.name == x.name } }
+      end
+      klass.import(new_records, validate: false, timestamps: false)
       through_klass = self.class.reflect_on_association(association_options[:through]).options[:class_name].constantize
-      # TODO deplicate keyになるので すでに登録されている場合に削除する必要gある
-      preinsert_record = klass.where(collected_value_hash.call(attrs)) # まだいらなかった
       source_key = self.class.reflect_on_association(association_name).options[:source] || association_name.to_s.singularize
       source_column_table = { id: "#{source_key}_id" }
       through_attrs = klass.where(
@@ -40,9 +45,7 @@ module ActiveRecord
       ).map { |x| { source_column_table[:id] => x.id } }
       raise('it be wrong') if through_attrs.empty?
       through_records = self.public_send(association_options[:through]).build(through_attrs)
-      ActiveRecord::Base.transaction do
-        through_klass.import(through_records, validate: false, timestamps: false)
-      end
+      through_klass.import(through_records, validate: false, timestamps: false)
     end
   end
 end
