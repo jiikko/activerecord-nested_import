@@ -21,6 +21,7 @@ class ActsAsTaggableOnMigration < ActiveRecord::Migration
 
     add_index :taggings, :tag_id
     add_index :taggings, [:taggable_id, :taggable_type, :context]
+    add_index :tags, :name, unique: true
   end
 
   def self.down

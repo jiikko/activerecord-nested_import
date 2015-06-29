@@ -21,8 +21,20 @@ describe ActiveRecord::NestedImport do
     end
 
     context 'with exist records' do
+      before do
+        User.create.nested_import(
+          :tags,
+          words.map { |x| { name: x } }
+        )
+      end
       it 'be success' do
-        # TODO
+        user = User.create
+        user.nested_import(
+          :tags,
+          words.map { |x| { name: x } }
+        )
+        expect(user.tags.count).to eq 5
+        expect(user.taggings.count).to eq 5
       end
     end
   end
