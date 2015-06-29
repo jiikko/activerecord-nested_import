@@ -8,8 +8,8 @@ describe ActiveRecord::NestedImport do
   describe '#nested_import' do
     let(:words) { %w(ジャバ ゆうお おお ジャバ うおおお　やま やば) }
 
-    context 'with 0 record' do
-      it 'be success' do
+    context 'with empty record' do
+      it 'has 5 records' do
         user = User.create
         user.nested_import(
           :tags,
@@ -20,15 +20,29 @@ describe ActiveRecord::NestedImport do
       end
     end
 
-    context 'with exist records' do
-      before do
+    context 'with exist tags records' do
+      it 'has 5 records' do
         User.create.nested_import(
           :tags,
           words.map { |x| { name: x } }
         )
-      end
-      it 'be success' do
         user = User.create
+        user.nested_import(
+          :tags,
+          words.map { |x| { name: x } }
+        )
+        expect(user.tags.count).to eq 5
+        expect(user.taggings.count).to eq 5
+      end
+    end
+
+    context 'with exist my tags records' do
+      it 'has 5 records' do
+        user = User.create
+        user.nested_import(
+          :tags,
+          words.map { |x| { name: x } }
+        )
         user.nested_import(
           :tags,
           words.map { |x| { name: x } }

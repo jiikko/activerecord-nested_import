@@ -44,8 +44,15 @@ module ActiveRecord
         collected_value_hash.call(attrs)
       ).map { |x| { source_column_table[:id] => x.id } }
       raise('it be wrong') if through_attrs.empty?
-      through_records = self.public_send(association_options[:through]).build(through_attrs)
-      through_klass.import(through_records, validate: false, timestamps: false)
+      through_new_records = []
+      through_build_records = self.public_send(association_options[:through]).build(through_attrs)
+      through_persisted_records = self.send(association_options[:through]).where(collected_value_hash.call(through_attrs))
+      if through_persisted_records.empty?
+        through_new_records = through_build_records
+      else
+        through_persisted_records.each { |x| through_new_records.push(x) unless through_build_records.detect { |y| y.tag_id == x.tag_id } }
+      end
+      through_klass.import(through_new_records, validate: false, timestamps: false)
     end
   end
 end
