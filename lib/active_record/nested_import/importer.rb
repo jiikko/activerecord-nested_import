@@ -17,6 +17,7 @@ module ActiveRecord
         end
 
         def to_a
+          setup
           @new_records
         end
 
@@ -39,10 +40,6 @@ module ActiveRecord
       end
 
       class FirstCollection < BaseCollection
-        def initialize(klass, attrs, association_name, ar_context)
-          super
-        end
-
         def setup
           if persisted_records.empty?
             @new_records = build_records
@@ -60,10 +57,9 @@ module ActiveRecord
         end
 
         def create_next_collection(klass, association_name)
-          collection = NextCollection.new(klass, attrs, association_name, ar_context) do |x|
+          NextCollection.new(klass, attrs, association_name, ar_context) do |x|
             x.prev_collection = self
           end
-          collection
         end
       end
 
@@ -99,10 +95,8 @@ module ActiveRecord
         through_klass = ar_context.class.reflect_on_association(association_options[:through]).options[:class_name].constantize
 
         first_collection = FirstCollection.new(klass, attrs, association_name, ar_context)
-        first_collection.setup
         klass.import(first_collection.to_a, validate: false, timestamps: false)
         next_collection = first_collection.create_next_collection(through_klass, association_options[:through])
-        next_collection.setup
         through_klass.import(next_collection.to_a, validate: false, timestamps: false)
       end
     end
