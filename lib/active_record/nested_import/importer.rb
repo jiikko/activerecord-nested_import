@@ -2,7 +2,12 @@ module ActiveRecord
   module NestedImport
     class Importer
       class BaseCollection
-        attr_accessor :association_name, :klass
+        attr_reader :association_name, :klass, :attrs
+        attr_accessor :prev_collection
+
+        def initialize(klass, attrs, association_name, ar_context)
+          yield(self) if block_given?
+        end
 
         def to_a
           @new_records
@@ -20,16 +25,20 @@ module ActiveRecord
             end
           }
         end
+
       end
 
       class FirstCollection < BaseCollection
         def initialize(klass, attrs, association_name, ar_context)
+          super
           @association_name = association_name
           @klass = klass
-          build_records = ar_context.public_send(association_name).build(attrs.uniq)
-          persisted_records = klass.where(collected_value_hash(attrs.uniq))
-
+          @ar_context = ar_context
+          @attrs = attrs
           @new_records = []
+        end
+
+        def setup
           if persisted_records.empty?
             @new_records = build_records
           else
@@ -40,10 +49,27 @@ module ActiveRecord
             }
           end
         end
+
+        def build_records
+          @ar_context.public_send(@association_name).build(@attrs.uniq)
+        end
+
+        def persisted_records
+          @klass.where(collected_value_hash(@attrs.uniq))
+        end
+
+        def create_next_collection(klass, association_name)
+          collection = NextCollection.new(klass, @attrs, association_name, @ar_context) do |x|
+            x.prev_collection = self
+          end
+          collection
+        end
       end
 
       class NextCollection < BaseCollection
-        def initialize(klass, attrs, association_name, ar_context, prev_collection)
+        def initialize(klass, attrs, association_name, ar_context)
+          super
+
           through_klass = ar_context.class.reflect_on_association(association_name).options[:class_name].constantize
           source_key = ar_context.class.reflect_on_association(prev_collection.association_name).options[:source] || prev_collection.association_name.to_s.singularize
           source_column_table = { id: "#{source_key}_id" }
@@ -72,14 +98,12 @@ module ActiveRecord
         association_options = ar_context.class.reflect_on_association(association_name).options
         klass = association_options[:class_name].constantize # tag
         first_collection = FirstCollection.new(klass, attrs, association_name, ar_context)
+        first_collection.setup
         klass.import(first_collection.to_a, validate: false, timestamps: false)
 
         through_klass = ar_context.class.reflect_on_association(association_options[:through]).options[:class_name].constantize
-        next_collection = NextCollection.new(through_klass, attrs, association_options[:through], ar_context, first_collection)
+        next_collection = first_collection.create_next_collection(through_klass, association_options[:through])
         through_klass.import(next_collection.to_a, validate: false, timestamps: false)
-      end
-
-      def import!
       end
     end
   end

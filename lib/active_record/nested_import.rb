@@ -16,7 +16,7 @@ end
 module ActiveRecord
   module NestedImport
     def nested_import(association_name, attrs, options = {})
-      Importer.new(self, association_name, attrs, options).import!
+      Importer.new(self, association_name, attrs, options)
     end
   end
 end
