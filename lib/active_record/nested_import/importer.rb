@@ -37,7 +37,7 @@ module ActiveRecord
             @new_records = build_records
           else
             persisted_records.each { |x|
-              if (build_records.detect { |y| equal_persistence_and_build?(x, y) }).nil?
+              if (build_records.detect { |y| equal?(x, y) }).nil?
                 @new_records.push(x)
               end
             }
@@ -63,18 +63,17 @@ module ActiveRecord
           klass.where(collected_value_hash(attrs.uniq))
         end
 
-        def equal_persistence_and_build?(x, y)
-          y.name == x.name
-          # TODO
-          # [{ name: :hoge, no: 1 }, { name: :hoge, no: 1 }] =>
-          # (x.name == y.name && x.no == y.no )
+        def equal?(x, y)
+          # TODO [{ name: :hoge, no: 1 }, { name: :hoge, no: 1 }] => (x.name == y.name && x.no == y.no )
+          @column_name ||= attrs.first.keys.first
+          y.public_send(@column_name) == x.public_send(@column_name)
         end
       end
 
       class NextCollection < BaseCollection
         private
 
-        def equal_persistence_and_build?(x, y)
+        def equal?(x, y)
           y.public_send("#{source_name}_id") == x.public_send("#{source_name}_id")
         end
 
