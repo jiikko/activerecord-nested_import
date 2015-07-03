@@ -3,7 +3,7 @@ $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'pry'
 require 'active_record'
 require "activerecord-import/base"
-require 'activerecord/nested_import'
+require 'active_record/nested_import'
 require 'acts-as-taggable-on'
 require 'internal/app/models/user'
 require 'internal/app/models/scratch_tag'

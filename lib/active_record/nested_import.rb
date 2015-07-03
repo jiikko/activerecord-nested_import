@@ -1,5 +1,5 @@
-require "activerecord/nested_import/version"
-require "activerecord/nested_import/importer"
+require "active_record/nested_import/version"
+require "active_record/nested_import/importer"
 require "activerecord-import/base"
 
 module ActiveRecord
