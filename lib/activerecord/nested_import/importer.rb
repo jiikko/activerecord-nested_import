@@ -79,7 +79,7 @@ module ActiveRecord
 
         def attrs
           source_column_table = { id: "#{source_name}_id" }
-          prev_collection.klass.where(
+          @_attrs ||= prev_collection.klass.where(
             collected_value_hash(@attrs) # @attrs がmiso
           ).map { |x| { source_column_table[:id] => x.id } }
         end
@@ -95,9 +95,8 @@ module ActiveRecord
 
       def initialize(ar_context, association_name, attrs, options = {})
         association_options = ar_context.class.reflect_on_association(association_name).options
-        klass = association_options[:class_name].constantize
-        through_klass = ar_context.class.reflect_on_association(association_options[:through]).options[:class_name].constantize
-
+        klass = (association_options[:class_name] || association_name.to_s.classify).constantize
+        through_klass = (ar_context.class.reflect_on_association(association_options[:through]).options[:class_name] || association_options[:through].to_s.classify).constantize
         first_collection = FirstCollection.new(klass, attrs, association_name, ar_context)
         klass.import(first_collection.to_a, validate: false, timestamps: false)
         next_collection = first_collection.create_next_collection(through_klass, association_options[:through])
